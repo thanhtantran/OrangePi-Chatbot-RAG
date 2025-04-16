@@ -1,5 +1,6 @@
 # History
 /chat_histories
+processed_files.json
 
 # .env
 .env
