@@ -11,3 +11,4 @@ langchain
 huggingface_hub
 transformers
 langchain_chroma
+hf_xet
