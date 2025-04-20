@@ -1,12 +1,12 @@
 import streamlit as st
 from datetime import datetime
 from pdf_processor import PDFProcessor
-from chat_handler import ChatHandler
+from chat_handler_gemini import ChatHandler
 from chat_history import ChatHistory
 
 # Phần đầu của file app.py - thêm vào đầu file
 st.set_page_config(
-    page_title="ChatPDF với DeepSeek trên Orange Pi",
+    page_title="ChatPDF với DeepSeek/Gemini trên Orange Pi",
     layout="wide",
 )
 
@@ -45,7 +45,7 @@ st.markdown("""
 # Header với logo
 header_col1, header_col2 = st.columns([3, 1])
 with header_col1:
-    st.title("ChatPDF với DeepSeek trên Orange Pi")
+    st.title("ChatPDF với DeepSeek/Gemini trên Orange Pi")
 with header_col2:
     st.markdown("""
     <div class="logo-container"> <a href="https://orangepi.vn" target="_blank">
@@ -133,6 +133,6 @@ st.markdown('</div>', unsafe_allow_html=True)
 # Footer với Copyright
 st.markdown("""
 <div class="footer">
-    © 2025 ChatPDF với DeepSeek trên Orange Pi - All Rights Reserved - <a href="https://orangepi.vn" target="_blank">Orange Pi Vietnam</a>
+    © 2025 ChatPDF với DeepSeek/Gemini trên Orange Pi - All Rights Reserved - <a href="https://orangepi.vn" target="_blank">Orange Pi Vietnam</a> Nếu bạn thấy mã nguồn này có ích, hãy <a href="https://thanhtan.id.vn" target="_blank">ủng hộ tôi</a>
 </div>
 """, unsafe_allow_html=True)
