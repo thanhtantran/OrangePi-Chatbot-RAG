@@ -23,7 +23,7 @@ pip install -r requirements.txt
 # Chạy ứng dụng Streamlit
 streamlit run app.py --server.fileWatcherType none
 ```
-- 17/04/2025: Nâng cấp sử dụng Google Gemini API và cải thiện xử lý PDF.
+- 20/04/2025: Nâng cấp sử dụng Google Gemini API và cải thiện xử lý PDF.
   
 Đầu tiên bạn cần tạo 1 file .env và đưa vào đó `GEMINI_API_KEY=Gemini API của bạn` (đăng ký tại https://ai.google.dev/).
 
