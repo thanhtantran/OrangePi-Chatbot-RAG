@@ -23,4 +23,18 @@ pip install -r requirements.txt
 # Chạy ứng dụng Streamlit
 streamlit run app.py --server.fileWatcherType none
 ```
-- 
+- 17/04/2025: Nâng cấp sử dụng Google Gemini API và cải thiện xử lý PDF.
+  
+Đầu tiên bạn cần tạo 1 file .env và đưa vào đó `GEMINI_API_KEY=Gemini API của bạn` (đăng ký tại https://ai.google.dev/).
+
+Tạo thêm 1 thư mục là `pdf_documents` và đưa vào đó các file pdf bạn muốn hệ thống đọc và phân tích. Cài thêm các gói.
+
+```
+# Install Tesseract OCR and Vietnamese language data
+sudo apt-get update
+sudo apt-get install -y tesseract-ocr
+sudo apt-get install -y tesseract-ocr-vie
+sudo apt-get install -y poppler-utils 
+```
+
+Sau đó chạy ứng dụng bằng lệnh `./start.sh`
