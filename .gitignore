@@ -2,6 +2,9 @@
 /chat_histories
 processed_files.json
 
+# Database
+/db
+
 # .env
 .env
 
