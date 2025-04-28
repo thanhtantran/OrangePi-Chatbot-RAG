@@ -38,3 +38,15 @@ sudo apt-get install -y poppler-utils
 ```
 
 Sau đó chạy ứng dụng bằng lệnh `./start.sh`
+
+- 28/04/2025: Nâng cấp sử dụng API của RKLLAMA và cải thiện xử lý PDF qua 2 cách, 1 là chỉ sử dụng model embedding, 2 là sử dụng cả model embedding và reranking.
+
+trong file app.py, bạn chỉnh sửa các thư viện theo tùy chọn
+
+`from pdf_processor import PDFProcessor` nếu chỉ sử dụng model embedding, 
+`from pdf_processor_rerank import PDFProcessor` sử dụng cả model embedding và reranking
+
+** Lưu ý: nếu chính sửa cách ingest PDF thì phải xóa tát cả nội dung trong thư mục `db` và thư mục `vectorstore` đã tạo ra để ingest lại **
+** Xóa hoàn toàn file `processed_files.json` để đọc lại toàn bộ file PDF trong thưc mục  `pdf_documents` **
+
+`from chat_handler_rkllama import ChatHandler` nếu chọn RKLLAMA Local Server là máy chủ thao tác LLM. Bạn phải có máy chủ RKLLAMA Local Server đang chạy ở địa chỉ `http://127.0.0.1:8080`

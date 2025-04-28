@@ -1,12 +1,13 @@
 import streamlit as st
 from datetime import datetime
+import time  # Thêm thư viện time để đo thời gian
 from pdf_processor import PDFProcessor
-from chat_handler_gemini import ChatHandler
+from chat_handler_rkllama import ChatHandler
 from chat_history import ChatHistory
 
 # Phần đầu của file app.py - thêm vào đầu file
 st.set_page_config(
-    page_title="ChatPDF với DeepSeek/Gemini trên Orange Pi",
+    page_title="ChatPDF với DeepSeek/Gemini/RKLLAMA trên Orange Pi",
     layout="wide",
 )
 
@@ -39,13 +40,27 @@ st.markdown("""
     .main-content {
         margin-bottom: 50px; /* Để tránh nội dung bị che bởi footer */
     }
+    .timestamp {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+        font-style: italic;
+    }
+    .response-time {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+        font-style: italic;
+        border-top: 1px solid #eee;
+        padding-top: 5px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # Header với logo
 header_col1, header_col2 = st.columns([3, 1])
 with header_col1:
-    st.title("ChatPDF với DeepSeek/Gemini trên Orange Pi")
+    st.title("ChatPDF với DeepSeek/Gemini/RKLLAMA trên Orange Pi")
 with header_col2:
     st.markdown("""
     <div class="logo-container"> <a href="https://orangepi.vn" target="_blank">
@@ -93,16 +108,33 @@ with st.sidebar:
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
+        
+        # Hiển thị thời gian chat nếu có
+        if "timestamp" in message:
+            st.markdown(f"<div class='timestamp'>Thời gian: {message['timestamp']}</div>", unsafe_allow_html=True)
+        
+        # Hiển thị thời gian trả lời nếu có
+        if message["role"] == "assistant" and "response_time" in message:
+            st.markdown(f"<div class='response-time'>Câu trả lời được tạo ra trong {message['response_time']:.2f} giây</div>", unsafe_allow_html=True)
 
 if question := st.chat_input("Nhập câu hỏi của bạn:"):
-    # Thêm câu hỏi vào messages
-    st.session_state.messages.append({"role": "user", "content": question})
+    # Thêm câu hỏi vào messages với timestamp
+    current_time = datetime.now().strftime("%H:%M:%S %d/%m/%Y")
+    st.session_state.messages.append({
+        "role": "user", 
+        "content": question,
+        "timestamp": current_time
+    })
     
     with st.chat_message("user"):
         st.write(question)
+        st.markdown(f"<div class='timestamp'>Thời gian: {current_time}</div>", unsafe_allow_html=True)
 
     with st.chat_message("assistant"):
         with st.spinner("Đang tìm câu trả lời..."):
+            # Bắt đầu đo thời gian
+            start_time = time.time()
+            
             # Tìm context liên quan
             similar_docs = st.session_state.processor.search_similar(question)
             context = "\n".join([doc.page_content for doc in similar_docs])
@@ -114,11 +146,24 @@ if question := st.chat_input("Nhập câu hỏi của bạn:"):
                 st.session_state.messages
             )
             
+            # Kết thúc đo thời gian
+            end_time = time.time()
+            response_time = end_time - start_time
+            
             st.write(response)
+            
+            # Hiển thị thời gian trả lời
+            current_time = datetime.now().strftime("%H:%M:%S %d/%m/%Y")
+            st.markdown(f"<div class='timestamp'>Thời gian: {current_time}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='response-time'>Câu trả lời được tạo ra trong {response_time:.2f} giây</div>", unsafe_allow_html=True)
+            
+            # Lưu thông tin vào messages
             st.session_state.messages.append({
                 "role": "assistant", 
                 "content": response,
-                "assistant_content": response
+                "assistant_content": response,
+                "timestamp": current_time,
+                "response_time": response_time
             })
 
             # Lưu lịch sử chat
@@ -133,6 +178,6 @@ st.markdown('</div>', unsafe_allow_html=True)
 # Footer với Copyright
 st.markdown("""
 <div class="footer">
-    © 2025 ChatPDF với DeepSeek/Gemini trên Orange Pi - All Rights Reserved - <a href="https://orangepi.vn" target="_blank">Orange Pi Vietnam</a> Nếu bạn thấy mã nguồn này có ích, hãy <a href="https://thanhtan.id.vn" target="_blank">ủng hộ tôi</a>
+    © 2025 ChatPDF với DeepSeek/Gemini/RKLLAMA trên Orange Pi - All Rights Reserved - <a href="https://orangepi.vn" target="_blank">Orange Pi Vietnam</a> Nếu bạn thấy mã nguồn này có ích, hãy <a href="https://thanhtan.id.vn" target="_blank">ủng hộ tôi</a>
 </div>
 """, unsafe_allow_html=True)
