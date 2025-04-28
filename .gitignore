@@ -4,6 +4,7 @@ processed_files.json
 
 # Database
 /db
+/vectorstore
 
 # .env
 .env
