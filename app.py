@@ -178,6 +178,6 @@ st.markdown('</div>', unsafe_allow_html=True)
 # Footer với Copyright
 st.markdown("""
 <div class="footer">
-    © 2025 ChatPDF với DeepSeek/Gemini/RKLLAMA trên Orange Pi - All Rights Reserved - <a href="https://orangepi.vn" target="_blank">Orange Pi Vietnam</a> Nếu bạn thấy mã nguồn này có ích, hãy <a href="https://thanhtan.id.vn" target="_blank">ủng hộ tôi</a>
+    © 2025 ChatPDF với DeepSeek/Gemini/RKLLAMA trên Orange Pi - All Rights Reserved - <a href="https://orangepi.vn" target="_blank">Orange Pi Vietnam</a> - - - Nếu bạn thấy mã nguồn này có ích, hãy <a href="https://thanhtan.id.vn" target="_blank">ủng hộ tôi</a>
 </div>
 """, unsafe_allow_html=True)
