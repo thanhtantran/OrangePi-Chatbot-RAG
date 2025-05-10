@@ -64,7 +64,9 @@ class ChatHandler:
             # Gửi yêu cầu tới API chat completions
             response = requests.post(
                 f"{self.base_url}/chat/completions",
-                json=request_data
+                json=request_data,
+                headers={'Content-Type': 'application/json'},
+                verify=False
             )
             end_time = time.time()
             
@@ -73,10 +75,14 @@ class ChatHandler:
                 print(f"Response time: {end_time - start_time:.2f} seconds")
                 return result["choices"][0]["message"]["content"]
             else:
-                return f"Error: API returned status code {response.status_code}: {response.text}"
+                error_msg = f"Error: API returned status code {response.status_code}: {response.text}"
+                print(error_msg)
+                return error_msg
                 
         except Exception as e:
-            return f"Error testing model: {str(e)}"
+            error_msg = f"Error testing model: {str(e)}"
+            print(error_msg)
+            return error_msg
     
     def get_answer(self, question, context):
         """
@@ -112,18 +118,22 @@ class ChatHandler:
             # Gửi yêu cầu tới API
             response = requests.post(
                 f"{self.base_url}/chat/completions",
-                json=request_data
+                json=request_data,
+                headers={'Content-Type': 'application/json'},
+                verify=False
             )
             
             if response.status_code == 200:
                 result = response.json()
                 return result["choices"][0]["message"]["content"]
             else:
-                print(f"Error: API returned status code {response.status_code}: {response.text}")
+                error_msg = f"Error: API returned status code {response.status_code}: {response.text}"
+                print(error_msg)
                 return "Sorry, I encountered an error while processing your question."
                 
         except Exception as e:
-            print(f"Error in get_answer: {str(e)}")
+            error_msg = f"Error in get_answer: {str(e)}"
+            print(error_msg)
             return "Sorry, I encountered an error while processing your question."
     
     def generate_response(self, context, question, chat_history=None):
@@ -168,21 +178,25 @@ class ChatHandler:
                 "temperature": self.temperature
             }
             
-            # Gửi yêu cầu tới API
+            # Gửi yêu cầu tới API với headers và disable SSL verification
             response = requests.post(
                 f"{self.base_url}/chat/completions",
-                json=request_data
+                json=request_data,
+                headers={'Content-Type': 'application/json'},
+                verify=False
             )
             
             if response.status_code == 200:
                 result = response.json()
                 return result["choices"][0]["message"]["content"]
             else:
-                print(f"Error: API returned status code {response.status_code}: {response.text}")
+                error_msg = f"Error: API returned status code {response.status_code}: {response.text}"
+                print(error_msg)
                 return "Sorry, I encountered an error while processing your question."
                 
         except Exception as e:
-            print(f"Error in generate_response: {str(e)}")
+            error_msg = f"Error in generate_response: {str(e)}"
+            print(error_msg)
             return "Sorry, I encountered an error while processing your question."
     
     def is_ready(self):
