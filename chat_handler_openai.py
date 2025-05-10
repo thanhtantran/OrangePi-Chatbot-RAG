@@ -16,11 +16,11 @@ class ChatHandler:
                 if models_data and "data" in models_data and len(models_data["data"]) > 0:
                     self.model_name = models_data["data"][0]["id"]
                 else:
-                    self.model_name = "Qwen2.5-7B-Instruct"  # Fallback nếu không lấy được
-                print(f"Successfully connected to server with model: {self.model_name}")
+                    self.model_name = "gemma-3-1b-it-rk3588-w8a8-opt-1-hybrid-ratio-0.0.rkllm"  # Fallback nếu không lấy được
+                print(f"Đã kết nối thành công với máy chủ, sử dụng model: {self.model_name}")
             else:
-                self.model_name = "Qwen2.5-7B-Instruct"  # Fallback nếu không kết nối được
-                print(f"Could not retrieve model information, using default: {self.model_name}")
+                self.model_name = "gemma-3-1b-it-rk3588-w8a8-opt-1-hybrid-ratio-0.0.rkllm"  # Fallback nếu không kết nối được
+                print(f"Không thể lấy thông tin model, sử dụng model mặc định: {self.model_name}")
             
             # Định nghĩa system message mặc định
             self.system_message = """Bạn là một trợ lý AI hữu ích, nhiệm vụ của bạn là trả lời câu hỏi dựa trên ngữ cảnh được cung cấp.
@@ -28,11 +28,18 @@ class ChatHandler:
             Nếu ngữ cảnh không chứa thông tin để trả lời câu hỏi, hãy nói "Tôi không tìm thấy thông tin về điều này trong tài liệu."
             """
             
+            # Tạo session để duy trì kết nối
+            self.session = requests.Session()
+            self.session.keep_alive = False  # Đóng connection pool để duy trì kết nối dài
+            adapter = requests.adapters.HTTPAdapter(max_retries=5)
+            self.session.mount('https://', adapter)
+            self.session.mount('http://', adapter)
+            
             # Đánh dấu là đã sẵn sàng
             self.client_ready = True
             
         except Exception as e:
-            print(f"Error initializing connection: {str(e)}")
+            print(f"Lỗi khởi tạo kết nối: {str(e)}")
             self.client_ready = False
     
     def test_model_generation(self, prompt="Xin chào, bạn là ai?"):
@@ -46,7 +53,7 @@ class ChatHandler:
             str: Văn bản được sinh ra, hoặc thông báo lỗi
         """
         if not self.client_ready:
-            return "Cannot test model because connection was not initialized successfully."
+            return "Không thể kiểm tra model vì kết nối chưa được khởi tạo thành công."
         
         try:
             start_time = time.time()
@@ -58,29 +65,47 @@ class ChatHandler:
                     {"role": "system", "content": "Bạn là một trợ lý AI hữu ích."},
                     {"role": "user", "content": prompt}
                 ],
-                "temperature": self.temperature
+                "temperature": self.temperature,
+                "stream": True
             }
             
             # Gửi yêu cầu tới API chat completions
-            response = requests.post(
+            response = self.session.post(
                 f"{self.base_url}/chat/completions",
                 json=request_data,
-                headers={'Content-Type': 'application/json'},
-                verify=False
+                headers={'Content-Type': 'application/json', 'Authorization': 'not_required'},
+                stream=True,
+                verify=False,
+                timeout=60
             )
-            end_time = time.time()
             
             if response.status_code == 200:
-                result = response.json()
-                print(f"Response time: {end_time - start_time:.2f} seconds")
-                return result["choices"][0]["message"]["content"]
+                response_text = ""
+                for line in response.iter_lines():
+                    if line:
+                        try:
+                            line_text = line.decode('utf-8')
+                            if line_text.startswith("data: "):
+                                if line_text == "data: [DONE]":
+                                    continue
+                                line_json = json.loads(line_text.split("data: ")[1])
+                                if "choices" in line_json and len(line_json["choices"]) > 0:
+                                    if "delta" in line_json["choices"][-1] and "content" in line_json["choices"][-1]["delta"]:
+                                        response_text += line_json["choices"][-1]["delta"]["content"]
+                        except Exception as e:
+                            print(f"Lỗi xử lý dòng: {e}")
+                            continue
+                
+                end_time = time.time()
+                print(f"Thời gian phản hồi: {end_time - start_time:.2f} giây")
+                return response_text
             else:
-                error_msg = f"Error: API returned status code {response.status_code}: {response.text}"
+                error_msg = f"Lỗi: API trả về mã trạng thái {response.status_code}: {response.text}"
                 print(error_msg)
                 return error_msg
                 
         except Exception as e:
-            error_msg = f"Error testing model: {str(e)}"
+            error_msg = f"Lỗi kiểm tra model: {str(e)}"
             print(error_msg)
             return error_msg
     
@@ -96,7 +121,7 @@ class ChatHandler:
             str: Câu trả lời hoặc thông báo lỗi
         """
         if not self.client_ready:
-            return "Cannot answer because connection was not initialized successfully."
+            return "Không thể trả lời vì kết nối chưa được khởi tạo thành công."
         
         try:
             # Chuẩn bị tin nhắn với ngữ cảnh và câu hỏi
@@ -112,29 +137,47 @@ class ChatHandler:
                     {"role": "system", "content": self.system_message},
                     {"role": "user", "content": user_content}
                 ],
-                "temperature": self.temperature
+                "temperature": self.temperature,
+                "stream": True
             }
             
             # Gửi yêu cầu tới API
-            response = requests.post(
+            response = self.session.post(
                 f"{self.base_url}/chat/completions",
                 json=request_data,
-                headers={'Content-Type': 'application/json'},
-                verify=False
+                headers={'Content-Type': 'application/json', 'Authorization': 'not_required'},
+                stream=True,
+                verify=False,
+                timeout=60
             )
             
             if response.status_code == 200:
-                result = response.json()
-                return result["choices"][0]["message"]["content"]
+                response_text = ""
+                for line in response.iter_lines():
+                    if line:
+                        try:
+                            line_text = line.decode('utf-8')
+                            if line_text.startswith("data: "):
+                                if line_text == "data: [DONE]":
+                                    continue
+                                line_json = json.loads(line_text.split("data: ")[1])
+                                if "choices" in line_json and len(line_json["choices"]) > 0:
+                                    if "delta" in line_json["choices"][-1] and "content" in line_json["choices"][-1]["delta"]:
+                                        response_text += line_json["choices"][-1]["delta"]["content"]
+                        except Exception as e:
+                            print(f"Lỗi xử lý dòng: {e}")
+                            continue
+                
+                return response_text
             else:
-                error_msg = f"Error: API returned status code {response.status_code}: {response.text}"
+                error_msg = f"Lỗi: API trả về mã trạng thái {response.status_code}: {response.text}"
                 print(error_msg)
-                return "Sorry, I encountered an error while processing your question."
+                return "Xin lỗi, tôi gặp lỗi khi xử lý câu hỏi của bạn."
                 
         except Exception as e:
-            error_msg = f"Error in get_answer: {str(e)}"
+            error_msg = f"Lỗi trong get_answer: {str(e)}"
             print(error_msg)
-            return "Sorry, I encountered an error while processing your question."
+            return "Xin lỗi, tôi gặp lỗi khi xử lý câu hỏi của bạn."
     
     def generate_response(self, context, question, chat_history=None):
         """
@@ -149,7 +192,7 @@ class ChatHandler:
             str: Câu trả lời
         """
         if not self.client_ready:
-            return "Cannot generate response because connection was not initialized successfully."
+            return "Không thể tạo phản hồi vì kết nối chưa được khởi tạo thành công."
             
         try:
             # Tạo messages từ system, chat history (nếu có) và user question
@@ -157,12 +200,15 @@ class ChatHandler:
             
             # Thêm lịch sử chat vào messages nếu có
             if chat_history:
-                for entry in chat_history:
-                    # Giả định chat_history có cấu trúc [[human_message, ai_message], ...]
-                    if len(entry) >= 1:
-                        messages.append({"role": "user", "content": entry[0]})
-                    if len(entry) >= 2:
-                        messages.append({"role": "assistant", "content": entry[1]})
+                # Xử lý lịch sử chat theo định dạng của dự án
+                for msg in chat_history[-3:]:  # Lấy 3 tin nhắn gần nhất
+                    if isinstance(msg, list) and len(msg) >= 2:
+                        # Nếu chat_history có cấu trúc [[human_message, ai_message], ...]
+                        messages.append({"role": "user", "content": msg[0]})
+                        messages.append({"role": "assistant", "content": msg[1]})
+                    elif isinstance(msg, dict) and 'role' in msg and 'content' in msg:
+                        # Nếu chat_history có cấu trúc [{'role': 'user', 'content': '...'}, ...]
+                        messages.append(msg)
             
             # Thêm ngữ cảnh và câu hỏi hiện tại
             user_content = f"""Ngữ cảnh:
@@ -175,29 +221,47 @@ class ChatHandler:
             request_data = {
                 "model": self.model_name,
                 "messages": messages,
-                "temperature": self.temperature
+                "temperature": self.temperature,
+                "stream": True
             }
             
             # Gửi yêu cầu tới API với headers và disable SSL verification
-            response = requests.post(
+            response = self.session.post(
                 f"{self.base_url}/chat/completions",
                 json=request_data,
-                headers={'Content-Type': 'application/json'},
-                verify=False
+                headers={'Content-Type': 'application/json', 'Authorization': 'not_required'},
+                stream=True,
+                verify=False,
+                timeout=60
             )
             
             if response.status_code == 200:
-                result = response.json()
-                return result["choices"][0]["message"]["content"]
+                response_text = ""
+                for line in response.iter_lines():
+                    if line:
+                        try:
+                            line_text = line.decode('utf-8')
+                            if line_text.startswith("data: "):
+                                if line_text == "data: [DONE]":
+                                    continue
+                                line_json = json.loads(line_text.split("data: ")[1])
+                                if "choices" in line_json and len(line_json["choices"]) > 0:
+                                    if "delta" in line_json["choices"][-1] and "content" in line_json["choices"][-1]["delta"]:
+                                        response_text += line_json["choices"][-1]["delta"]["content"]
+                        except Exception as e:
+                            print(f"Lỗi xử lý dòng: {e}")
+                            continue
+                
+                return response_text
             else:
-                error_msg = f"Error: API returned status code {response.status_code}: {response.text}"
+                error_msg = f"Lỗi: API trả về mã trạng thái {response.status_code}: {response.text}"
                 print(error_msg)
-                return "Sorry, I encountered an error while processing your question."
+                return "Xin lỗi, tôi gặp lỗi khi xử lý câu hỏi của bạn."
                 
         except Exception as e:
-            error_msg = f"Error in generate_response: {str(e)}"
+            error_msg = f"Lỗi trong generate_response: {str(e)}"
             print(error_msg)
-            return "Sorry, I encountered an error while processing your question."
+            return "Xin lỗi, tôi gặp lỗi khi xử lý câu hỏi của bạn."
     
     def is_ready(self):
         """
