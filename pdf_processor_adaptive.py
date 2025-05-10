@@ -52,9 +52,9 @@ class PDFProcessor:
         self.db_directory = db_directory
         self.processed_files_path = processed_files_path
         
-        # Sử dụng BAAI/bge-m3 làm model embedding
+        # Sử dụng thanhtantran/Vietnamese_Embedding_v2 làm model embedding
         self.embeddings = HuggingFaceEmbeddings(
-            model_name="BAAI/bge-m3"
+            model_name="thanhtantran/Vietnamese_Embedding_v2"
         )
         
         # Improved text splitting for better context preservation

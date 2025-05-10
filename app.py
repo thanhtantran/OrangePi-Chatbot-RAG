@@ -1,8 +1,8 @@
 import streamlit as st
 from datetime import datetime
 import time  # Thêm thư viện time để đo thời gian
-from pdf_processor import PDFProcessor
-from chat_handler_rkllama import ChatHandler
+from pdf_processor_adaptive import PDFProcessor
+from chat_handler_openai import ChatHandler
 from chat_history import ChatHistory
 
 # Phần đầu của file app.py - thêm vào đầu file

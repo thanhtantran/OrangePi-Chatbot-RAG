@@ -50,9 +50,9 @@ class PDFProcessor:
         self.db_directory = db_directory
         self.processed_files_path = processed_files_path
         
-        # Sử dụng BAAI/bge-m3 làm model embedding
+        # Sử dụng thanhtantran/Vietnamese_Embedding_v2 làm model embedding
         self.embeddings = HuggingFaceEmbeddings(
-            model_name="BAAI/bge-m3"
+            model_name="thanhtantran/Vietnamese_Embedding_v2"
         )
         
         # Improved text splitting for better context preservation
@@ -209,13 +209,13 @@ class PDFProcessor:
 
     def _rerank_results(self, query, initial_results, top_k=5):
         """
-        Rerank results using BAAI/bge-reranker-v2-m3
+        Rerank results using thanhtantran/Vietnamese_Reranker
         """
         try:
             from sentence_transformers import CrossEncoder
             
             # Khởi tạo cross-encoder cho reranking
-            reranker = CrossEncoder('BAAI/bge-reranker-v2-m3')
+            reranker = CrossEncoder('thanhtantran/Vietnamese_Reranker')
             
             # Chuẩn bị cặp (query, passage) cho reranker
             pairs = [(query, doc.page_content) for doc in initial_results]
