@@ -1,8 +1,20 @@
 import streamlit as st
 from datetime import datetime
+import asyncio
+import nest_asyncio
 from pdf_processor_adaptive import PDFProcessor
 from chat_handler_openai import ChatHandler
 from chat_history import ChatHistory
+
+# Fix for asyncio event loop error
+try:
+    asyncio.get_running_loop()
+except RuntimeError:
+    # No running event loop, create one
+    asyncio.set_event_loop(asyncio.new_event_loop())
+
+# Apply nest_asyncio to allow nested event loops
+nest_asyncio.apply()
 
 # Phần đầu của file app.py - thêm vào đầu file
 st.set_page_config(
