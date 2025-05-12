@@ -202,13 +202,8 @@ class ChatHandler:
             if chat_history:
                 # Xử lý lịch sử chat theo định dạng của dự án
                 for msg in chat_history[-3:]:  # Lấy 3 tin nhắn gần nhất
-                    if isinstance(msg, list) and len(msg) >= 2:
-                        # Nếu chat_history có cấu trúc [[human_message, ai_message], ...]
-                        messages.append({"role": "user", "content": msg[0]})
-                        messages.append({"role": "assistant", "content": msg[1]})
-                    elif isinstance(msg, dict) and 'role' in msg and 'content' in msg:
-                        # Nếu chat_history có cấu trúc [{'role': 'user', 'content': '...'}, ...]
-                        messages.append(msg)
+                    if isinstance(msg, dict) and 'role' in msg and 'content' in msg:
+                        messages.append({"role": msg['role'], "content": msg['content']})
             
             # Thêm ngữ cảnh và câu hỏi hiện tại
             user_content = f"""Ngữ cảnh:
